@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lung Cancer Detector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('D:\Accenture\LungCancerDetector\lung.jpeg'); /* Replace with your lung background image URL */
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #3498db;
+        }
+        #imageUpload {
+            display: none;
+        }
+        .upload-btn {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .upload-btn:hover {
+            background-color: #2980b9;
+        }
+        .predict-btn {
+            background-color: #2ecc71;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .predict-btn:hover {
+            background-color: #27ae60;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        #imagePreview {
+            max-width: 100%;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 13px;
+            padding: 3px;
+            margin-top: 20px;
+        }
+        .progress {
+            width: 0%;
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 10px;
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lung Cancer Detector</h1>
+        <input type="file" id="imageUpload" accept="image/*" onchange="previewImage(event)">
+        <label for="imageUpload" class="upload-btn">Choose Image</label>
+        <br><br>
+        <button onclick="predictImage()" class="predict-btn">Predict</button>
+        <div id="result"></div>
+        <img id="imagePreview" src="" alt="Image Preview" style="display: none;">
+        <div class="progress-bar">
+            <div id="progress" class="progress"></div>
+        </div>
+    </div>
+
+    <script>
+        function previewImage(event) {
+            var reader = new FileReader();
+            reader.onload = function(){
+                var output = document.getElementById('imagePreview');
+                output.src = reader.result;
+                output.style.display = 'block';
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        function predictImage() {
+            const fileInput = document.getElementById('imageUpload');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select an image file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            // Reset progress bar and result
+            document.getElementById('progress').style.width = '0%';
+            document.getElementById('result').innerText = '';
+
+            // Simulate progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                document.getElementById('progress').style.width = `${progress}%`;
+                if (progress >= 90) clearInterval(interval);
+            }, 200);
+
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                clearInterval(interval);
+                document.getElementById('progress').style.width = '100%';
+                setTimeout(() => {
+                    document.getElementById('result').innerText = `Prediction: ${data.prediction} (Confidence: ${data.confidence})`;
+                }, 500);
+            })
+            .catch(error => {
+                clearInterval(interval);
+                document.getElementById('progress').style.width = '0%';
+                console.error('Error:', error);
+                document.getElementById('result').innerText = 'An error occurred during prediction';
+            });
+        }
+    </script>
+</body>
+</html>
